@@ -1,0 +1,537 @@
+---
+title: "Midterm 2"
+author: "Soumya Goswami // Graduate Student    Done alone"
+date: "04/09/2021"
+output:
+  word_document: default
+  df_print: paged
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=80))
+```
+
+***
+***
+
+\newpage{}
+
+## Midterm-2 Project Instruction
+
+In `Midterm-1 Project`, you have built predictive models using train and test data sets about college students' academic performances and retention status. You fitted four regression models on \textbf{Term.GPA} and four classification models on \textbf{Persistence.NextYear}. the lowest test score of $MSE_{test}$ achieved on the regression problem was $.991$ using a simple linear regression, and the highest `accuracy` and `F1` scores obtained were $91.15$% and $95.65$%, respectively, with the fit of a multiple logistic regression model (equivalently, LDA and QDA give similar performances). Let's call these scores as baseline test scores.
+
+In `Midterm-2 Project`, you will use tree-based methods (trees, random forests, boosting) and artificial neural networks (Modules 5, 6, and 7) to improve the baseline results. There is no any answer key for this midterm: your efforts and justifications will be graded, pick one favorite optimal tree-based method and one optimal ANN architecture for each regression and classification problem (a total of two models for classification and two models for regression), and fit and play with hyperparameters until you get satisfactory improvements in the test data set.
+
+Keep in mind that $Persistence.NextYear$ is not included in as predictor the regression models so use all the predictors except that on the regression. For the classification models, use all the predictors including the term gpa.
+
+First of all, combine the train and test data sets, create dummies for all categorical variables, which include `Entry_Term`, `Gender`, and `Race_Ethc_Visa`, so the data sets are ready to be separated again as train and test. (Expect help on this portion!) You will be then ready to fit models. 
+
+
+***
+
+\section{A. Improving Regression Models - 15 pts}
+
+- Explore tree-based methods, choose the one that is your favorite and yielding optimal results, and then search for one optimal ANN architecture for the regression problem (so two models to report). Fit and make sophisticated decisions by justifying and writing precisely. Report `the test MSE` results in a comparative table along with the methods so the grader can capture all your efforts on building various models in one table.
+
+\section{B. Improving Classification Models - 20 pts}
+
+- Explore tree-based methods, choose the one that is your favorite and yielding optimal results, and then search for one optimal ANN architecture for the classification problem (so two models to report). Fit and make sophisticated decisions by justifying and writing precisely. Report `the test accuracy` and `the test F1` results in a comparative table along with the methods so the grader can capture all your efforts in one table.
+
+
+\section{C. Importance Analyses - 15 pts}
+
+- Part a. Perform an importance analysis on the best regression model: which three predictors are most important or effective to explain the response variable? Find the relationship and dependence of these predictors with the response variable. Include graphs and comments.
+
+- Part b. Perform an importance analysis on the best classification model: which three predictors are most important or effective to explain the response variable? Find the relationship and dependence of these predictors with the response variable. Include graphs and comments.
+
+- Part c. Write a conclusion paragraph. Evaluate overall what you have achieved. Did the baselines get improved? Why do you think the best model worked well or the models didn't work well? How did you handle issues? What could be done more to get `better` and `interpretable` results? Explain with technical terms.
+
+***
+\newpage{}
+
+\section{Project Evaluation}
+
+The submitted project report will be evaluated according to the following criteria: 
+
+\begin{enumerate}
+\item All models in the instruction used correctly 
+\item Completeness and novelty of the model fitting 
+\item Techniques and theorems of the methods used accurately
+\item Reflection of in-class lectures and discussions
+\item Achieved reasonable/high performances; insights obtained (patterns of variables)
+\item Clear and minimalist write-ups
+\end{enumerate}
+
+If the response is not full or not reflecting the correct answer as expected, you may still earn partial points. For each part or model, I formulated this `partial points` as this:
+
+- 20% of pts: little progress with some minor solutions; 
+- 40% of pts: major calculation mistake(s), but good work, ignored important pieces; 
+- 60-80% of pts: correct method used, but minor mistake(s). 
+
+Additionally, a student who will get the highest performances from both problems in the class (`minimum test MSE` from the regression model and `highest F1` from the classification model) will get a BONUS (up to +2 pts). Just follow up when you think you did good job!
+
+***
+\newpage{}
+\section{Tips}
+
+- `Term.gpa` is an aggregated gpa up until the current semester, however, this does not include this current semester. In the modeling of `gpa`, include all predictors except `persistent`.
+- The data shows the `N.Ws`, `N.DFs`, `N.As` as the number of courses withdrawn, D or Fs, A's respectively in the current semester.
+- Some rows were made synthetic so may not make sense: in this case, feel free to keep or remove.
+- It may be poor to find linear association between gpa and other predictors (don't include `persistent` in `gpa` modeling).
+- Scatterplot may mislead since it doesn't show the density.
+- You will use the test data set to asses the performance of the fitted models based on the train data set.
+- Implementing 5-fold cross validation method while fitting with train data set is strongly suggested.
+- You can use any packs (`caret`, `Superml`, `rpart`, `xgboost`, or [visit](https://cran.r-project.org/web/views/MachineLearning.html)  to search more) as long as you are sure what it does and clear to the grader.
+- Include helpful and compact plots with titles.
+- Keep at most 4 decimals to present numbers and the performance scores. 
+- When issues come up, try to solve and write up how you solve or can't solve.
+- Check this part for updates: the instructor puts here clarifications as asked.
+
+
+***
+
+\newpage
+
+
+
+## Your Solutions
+
+\subsection{Section A.} 
+
+```{r echo=TRUE, results='hold'}
+getwd() #gets what working directory is
+
+# Create a RStudio Project and work under it.
+
+#Download, Import and Assign 
+train <- read.csv("StudentDataTrain.csv")
+test <- read.csv("StudentDataTest.csv")
+```
+
+```{r echo=TRUE, results='hold'}
+#Dims
+dim(train) #5961x18
+dim(test) #1474x18
+```
+
+```{r echo=TRUE, results='hold'}
+#Without NA's
+dim(na.omit(train)) #5757x18
+dim(na.omit(test)) #1445x18
+```
+
+```{r echo=TRUE, results='hold'}
+#Perc of complete cases
+sum(complete.cases(train))/nrow(train)
+sum(complete.cases(test))/nrow(test)
+```
+
+```{r echo=TRUE, results='hold'}
+#Delete or not? Don't delete!! Use Imputation method to fill na's
+train <- na.omit(train)
+test <- na.omit(test)
+dim(train)
+```
+
+```{r echo=TRUE, results='hold'}
+library(fastDummies)
+View(train<-fastDummies::dummy_cols(train,
+select_columns=c('Entry_Term', 'Gender', 'Race_Ethc_Visa'),
+remove_first_dummy = TRUE, remove_selected_columns=TRUE)
+)
+train=subset(train,select=-Entry_Term_2151)
+```
+
+
+```{r echo=TRUE, results='hold'}
+#test data set with dummies, original cols removed,
+View(test<-fastDummies::dummy_cols(test,
+select_columns=c('Entry_Term', 'Gender', 'Race_Ethc_Visa'),
+remove_first_dummy = TRUE, remove_selected_columns=TRUE)
+)
+```
+
+```{r echo=TRUE, results='hold'}
+#Response variables
+#you may do this
+y1=train$Term.GPA #numerical
+y2=train$Persistence.NextYear #categorical: 0, 1
+#you may do this
+z1=test$Term.GPA #numerical
+z2=test$Persistence.NextYear #categorical: 0, 1
+```
+
+```{r, echo=TRUE, results='hold'}
+library(tree) #class and reg trees
+#fit the model on train
+tree.GPA=tree(Term.GPA~.-Persistence.NextYear,train)
+
+#predict the test
+tree.pred=predict(tree.GPA,test)
+MSE_tree=mean((tree.pred-z1)^2)
+MSE_tree
+```
+So MSE on test set is very low which is good . We will try to reduce it further.
+We will apply tree with pruning.
+```{r, echo=TRUE, results='hold'}
+#plot
+plot(tree.GPA)
+text(tree.GPA,pretty=0)
+```
+
+```{r, echo=TRUE, results='hold'}
+prune.GPA=prune.tree(tree.GPA,best=6)
+
+tree.pred=predict(prune.GPA,test)
+MSE_tree_prun=mean((tree.pred-z1)^2)
+MSE_tree_prun
+```
+So pruning does not really improve our model.
+
+We will try Random fores here
+
+```{r, echo=TRUE, results='hold'}
+## Bagging and Random Forests
+library(randomForest)
+
+#when m=p, this is just a random forest
+set.seed(99)
+#shrn mtry=p, it is bagging
+bag.GPA=randomForest(Term.GPA~.-Persistence.NextYear,data=train,
+                        mtry=10,
+                        importance=TRUE)
+bag.GPA
+
+#discuss the input, arguments and output
+
+#predict
+yhat.bag = predict(bag.GPA,newdata=test)
+```
+```{r, echo=TRUE, results='hold'}
+MSE_bag=mean((yhat.bag-z1)^2)
+MSE_bag
+``` 
+So MSE on test set is 0.88186 which is lower than the decision tree case.
+
+Now we implement ANN with two hidden layers
+
+```{r, echo=TRUE, results='hold'}
+require(neuralnet)
+set.seed(99)
+nn_sc2=neuralnet(Term.GPA~.-Persistence.NextYear, 
+  data=train, 
+  hidden=10,
+  threshold = 0.01, 
+  stepmax = 1e+05,  
+  act.fct = "logistic", 
+  linear.output = TRUE, 
+  learningrate=NULL, 
+  startweights = NULL, #NULL for random initialization
+  algorithm = "rprop+",
+  err.fct = "sse", 
+  likelihood = FALSE, 
+)
+x0hat=predict(nn_sc2,test)
+MSE_ANN=mean((x0hat-z1)^2)
+MSE_ANN
+``` 
+So we chose the optimal ANN  with a  single hidden layer as we obtained more testing MSE with multiple hidden layers. Hence we fixed a single hidden layer
+
+```{r, echo=TRUE, eval=TRUE}
+a=rbind(MSE_tree,MSE_bag,MSE_ANN)
+rownames(a)=c("Decision tree","random forest","ANN")
+colnames(a)=c("MSE on test set")
+knitr::kable(a, caption = "Model Metrics")
+```
+So comparing all the models, we see that decision tree and ANN does the best job in this case compared to RANDOM FOREST. Since we have 21 parameters,ANN would give the optimum results. Random forest did not perform well because the number of paarmeters in this case is low.
+
+***
+
+\newpage
+\subsection{Section B.} 
+```{r, echo=TRUE, results='hold'}
+perfcheck <- function(ct) {
+  Accuracy <- (ct[1]+ct[4])/sum(ct)
+  Recall <- ct[4]/sum((ct[2]+ct[4]))      #TP/P   or Power, Sensitivity, TPR 
+  Type1 <- ct[3]/sum((ct[1]+ct[3]))       #FP/N   or 1 - Specificity , FPR
+  Precision <- ct[4]/sum((ct[3]+ct[4]))   #TP/P*
+  Type2 <- ct[2]/sum((ct[2]+ct[4]))       #FN/P
+  F1 <- 2/(1/Recall+1/Precision)
+  Values <- as.vector(round(c(Accuracy, Recall, Type1, Precision, Type2, F1),4)) *100
+  Metrics = c("Accuracy", "Recall", "Type1", "Precision", "Type2", "F1")
+  cbind(Metrics, Values)
+  #list(Performance=round(Performance, 4))
+}
+```
+
+```{r, echo=TRUE, results='hold'}
+library(tree) #class and reg trees
+#fit the model on train
+tree.persistence=tree(Persistence.NextYear~.,train)
+#predict the test
+tree.pred=predict(tree.persistence,test)
+tree.pred <- ifelse(tree.pred>0.5, 1, 0)
+tree_table=table(tree.pred, z2)
+me_log_tree=perfcheck(tree_table)
+me_log_tree
+```
+
+```{r, echo=TRUE, results='hold'}
+prune.persistence=prune.tree(tree.persistence,best=8)
+
+tree.pred=predict(prune.persistence,test)
+tree.pred <- ifelse(tree.pred>0.5, 1, 0)
+tree_prune_table=table(tree.pred, z2)
+me_log_tree_prune=perfcheck(tree_prune_table)
+me_log_tree_prune
+```
+Now we implement random forest
+```{r, echo=TRUE, results='hold'}
+## Bagging and Random Forests
+library(randomForest)
+
+#when m=p, this is just a random forest
+set.seed(99)
+#shrn mtry=p, it is bagging
+bag.persistence=randomForest(Persistence.NextYear~.,data=train,mtry=60,
+                        ntree=10,
+                        importance=TRUE,
+                        proximity=TRUE)
+bag.persistence
+
+#discuss the input, arguments and output
+
+#predict
+yhat.bag = predict(bag.persistence,newdata=test)
+```
+
+```{r, echo=TRUE, results='hold'}
+yhat.bag <- ifelse(yhat.bag>0.5, 1, 0)
+bag_table=table(yhat.bag, z2)
+me_log_bag=perfcheck(bag_table)
+me_log_bag
+``` 
+
+
+implementing ANN
+```{r, echo=TRUE, results='hold'}
+require(neuralnet)
+set.seed(99)
+nn_sc2=neuralnet(Persistence.NextYear~., 
+  data=train, 
+  hidden=3,
+  threshold = 0.01, 
+  stepmax = 1e+05,  
+  act.fct = "logistic", 
+  linear.output = FALSE, 
+  learningrate=NULL, 
+  startweights = NULL, #NULL for random initialization
+  algorithm = "rprop+",
+  err.fct = "ce", 
+  likelihood = FALSE, 
+)
+#x0hat=predict(nn_sc2,subset(test,select=-c(Term.GPA,Persistence.NextYear)))
+#MSE_ANN=mean((x0hat-z1)^2)
+#MSE_ANN
+x0hat <- compute(nn_sc2,test)$net.result
+x0hat <- ifelse(x0hat>0.5, 1, 0)
+ANN_table=table(x0hat, z2)
+me_log_ANN=perfcheck(ANN_table)
+me_log_ANN
+``` 
+
+```{r, echo=TRUE, eval=TRUE}
+a=rbind(c(me_log_tree[1,2],me_log_tree[6,2]),c(me_log_bag[1,2],me_log_bag[6,2]),c(me_log_ANN[1,2],me_log_ANN[6,2]))
+rownames(a)=c("Decision tree","random forest","ANN")
+colnames(a)=c("Accuracy","F1-score")
+knitr::kable(a, caption = "Model Metrics")
+```
+So we see that decision tree gives us the best accuracy of 95.64% and F1-score of 97.58% which is pretty good.
+
+***
+\newpage
+\subsection{Section C.} 
+
+- Part a.
+
+Here we will evaluate the three important variables for random forest regression model.
+```{r, echo=TRUE, eval=TRUE}
+#get importance analysis and plot
+importance(bag.GPA)
+varImpPlot(bag.GPA)
+```
+So we find based on IncMSE and IncNodePurity, that the best three predictors are HSGPA, SAT_Total & N.RegisteredCourse.
+
+We also do a correlation analysis of each predictor an the response variable
+```{r, echo=TRUE, results='hold'}
+par(mfrow=c(1,3))
+scatter.smooth(train$HSGPA,y1)
+scatter.smooth(train$SAT_Total,y1)
+scatter.smooth(train$N.RegisteredCourse,y1)
+```
+so we see from scatterplot there is not much strong correlation between tthe varaibales and the response Term.GPA
+
+Now we calculate the correlation
+```{r, echo=TRUE, results='hold'}
+cat('the correlation between HSGPA & Term.GPA', cor(train$HSGPA,y1), 'between SAT_Total & Term.GPA', cor(train$SAT_Total,y1),'between N.RegisteredCourse & Term.GPA', cor(train$N.RegisteredCourse,y1))
+```
+***
+- Part b.
+
+Here we will perform importance analysis on decision tree based classification
+```{r, echo=TRUE, eval=TRUE}
+plot(prune.persistence)
+text(prune.persistence,pretty=0)
+```
+So based on the tree, we see that three best predictors in order are Term.GPA, HSGPA AND Perc.Pass
+
+```{r, echo=TRUE, results='TRUE'}
+par(mfrow=c(1,3))
+scatter.smooth(train$Term.GPA,y2)
+scatter.smooth(train$HSGPA,y2)
+scatter.smooth(train$Perc.Pass,y2)
+```
+So we see good dependence between Term.GPA and Persistence.NextYear
+
+```{r, echo=TRUE, results='hold'}
+cat('the correlation between Term.GPA & Persistence.NextYear', cor(train$Term.GPA,y2), 'between HSGPA & Persistence.NextYear', cor(train$HSGPA,y2),'between Perc.Pass & Persistence.NextYear', cor(train$Perc.Pass,y2))
+```
+
+***
+
+- Part c.
+
+In conclusion, we can say that in the regression model, ANN, decision tree gave comparable results. Since we have already seen that none of the predictors have a strong relation with the Term.GPA response variable. So prunning of trees did not help us in this case . In the first tree that we fir, we get the optimum results with HSGPA as the best predictor variable. For classification, we did pretty good job in the tree model, random forest and ANN as well. But in this case decision tree gave us the best result with 97% accuracy and 95% F1-SCORE. This indicates we dont have class imbalance problem here and also train and test performance is very close we observed for all the modles. So that further suggests our data is pretty consistent.
+
+Did the baselines get improved?
+
+Ans: Yes we improved the baselines in both the cases.
+
+In Regression analysis, we observed MSE_Test of 0.983 with decision tree compared to baseline score of 0.991. This suggests Term.GPA as response variable can be well fit using our model.
+
+In classification analysis, we again improved the baseline score of 91.15% accuracy and 95.65% F1-score by decision tree which gave us accuracy 95.64%, F1-SCORE 97.58%, by random forest accuracy 92.46%, F1-SCORE 95.73% and by ANN F1-SCORE 94.19%. So we outperform baseline results.
+
+
+Why do you think the best model worked well or the models didn’t work well?
+
+Ans: In regression decision tree and ANN work well because our train test data is consistent,. Even if its noisy, the distribution is pretty consistent. So thats why we didnot overfit and our test accuracy is pretty high.
+
+In classification ANN accuracy is not high becasue maybe here we have very few parameters to train on. With more parameters the performance would have improved. Whereas in decision tree, the less the parameters the better the generalization of the model.
+
+How did you handle issues?
+
+Ans: I converted the categorical variables into binary (numerical). Also we did a cross fold validation. In the classification problem, we did pruning of trees. 
+
+What could be done more to get better and interpretable results?
+
+Ans: Maybe in regression problem we could try to normalize all predictors and see the performance. Because none of the predictors have a strong correlation with the response. Although here we dont have data imbalance, we could have done some sampling(undersampling for majority class and undersampling for minority class)
+
+For the ANN model we could have chosen more hiden layers. Here we have tried with two only. These are possible improvements.
+
+***
+
+\newpage
+
+- BONUS.
+
+Yes we improved the baselines in both the cases.
+
+In Regression analysis, we observed MSE_Test of 0.983 with decision tree compared to baseline score of 0.991. This suggests Term.GPA as response variable can be well fit using our model.
+
+In classification analysis, we again improved the baseline score of 91.15% accuracy and 95.65% F1-score by decision tree which gave us accuracy 95.64%, F1-SCORE 97.58%, by random forest accuracy 92.46%, F1-SCORE 95.73% and by ANN F1-SCORE 94.19%. So we outperform baseline results.
+
+***
+
+\newpage
+
+***
+
+\section{DELETE THIS PORTION WHEN SUBMITTION - Setup and Useful Codes}
+
+```{r eval=FALSE}
+# Create a RStudio Project and work under it.
+
+#Download, Import and Assign 
+train <- read.csv("StudentDataTrain.csv")
+test <- read.csv("StudentDataTest.csv")
+
+#Summarize univariately
+summary(train) 
+summary(test) 
+
+#Dims
+dim(train) #5961x18
+dim(test) #1474x18
+
+#Without NA's
+dim(na.omit(train)) #5757x18
+dim(na.omit(test)) #1445x18
+
+#Perc of complete cases
+sum(complete.cases(train))/nrow(train)
+sum(complete.cases(test))/nrow(test)
+
+#Delete or not? In general, we don't delete and use Imputation method to fill na's
+#However, in midterm, you can omit or use any imputation method
+train <- na.omit(train)
+test <- na.omit(test)
+dim(train)
+
+#Missing columns as percent
+san = function(x) sum(is.na(x))
+round(apply(train,2,FUN=san)/nrow(train),4) #pers of na's in columns
+round(apply(train,1,FUN=san)/nrow(train),4) #perc of na's in rows
+
+##
+#you can create new columns based on features
+
+##Make dummy
+#make sure each is numerical and dummy, check what dropped
+
+#train data set with dummies, original cols removed, 
+
+View(train<-fastDummies::dummy_cols(train, 
+                                 select_columns=c('Entry_Term', 'Gender', 'Race_Ethc_Visa'),
+                                 remove_first_dummy = TRUE, remove_selected_columns=TRUE)
+     )
+
+
+#test data set with dummies, original cols removed, 
+View(test<-fastDummies::dummy_cols(test, 
+                                    select_columns=c('Entry_Term', 'Gender', 'Race_Ethc_Visa'),
+                                    remove_first_dummy = TRUE, remove_selected_columns=TRUE)
+)
+
+
+#drop Persistence.NextYear for regression problem
+
+##check: if col names are same, dim, etc.
+
+#Variable/Column names
+colnames(test)
+
+#Response variables 
+#you may do this
+y1=train$Term.GPA #numerical
+y2=train$Persistence.NextYear #categorical: 0, 1
+#you may do this
+z1=test$Term.GPA #numerical
+z2=test$Persistence.NextYear #categorical: 0, 1
+```
+
+
+***
+I hereby write and submit my solutions without violating the academic honesty and integrity. If not, I accept the consequences. 
+
+### Write your pair you worked at the top of the page. If no pair, it is ok. List other fiends you worked with (name, last name): ...
+
+### Disclose the resources or persons if you get any help: ...
+
+### How long did the assignment solutions take?: ...
+
+
+***
+## References
+...

@@ -1,0 +1,1045 @@
+---
+title: "Midterm-1 Project Portion - Version 1"
+author: 'First and last name: Soumya Goswami // Pair''s first and last name: ____
+  _____'
+date: 'Submission Date: 03/09/2021'
+output:
+  word_document: default
+  df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=80))
+```
+
+***
+
+**Read and Delete This Part Before Submission**
+
+- Find a pair, work together, split parts among each of you, explain your findings to each other, make sure you understand all, combine work, and submit separately. It is fine if your codes and results are the same. I expect comments will be your own. If you don't have pair, it is ok.
+- Give a name to this rmd file: `Midterm1_Submission_FirstName_LastName.rmd`. 
+- You will then submit two files to Blackboard: `.rmd` and the knitted `.pdf` files.
+- Grading will be based on the pdf file uploaded. Make easy and readable. Grader or me may take a look at the rmd file.
+- Unless otherwise specified, use a 5% level for statistical significance.
+- Always include your comments on results: don't just leave the numbers without explanations. Use full sentences, structured paragraphs if needed, correct grammar, and proofreading.
+- Show your knowledge with detailed work in consistency with course materials. 
+- Show code. Don't include irrelevant or uncommented outputs. Compact the code and results.
+- TAs will grade your  and pair's submission.
+
+
+***
+
+\newpage{}
+
+## Midterm-1 Project Instruction
+
+Midterm-1 has test and project portions. This is the project portion. Based on what we covered on the modules 1, 2 and 3, you will reflect statistical methods by analyzing data and building predictive models using train and test data sets. The data sets are about college students and their academic performances and retention status, which include categorical and numerical variables. 
+
+Throughout the data analysis, we will consider only two response variables, 1) current GPA of students, a numerical response variable, call it \textbf{y1}=\textbf{Term.GPA} and 2) Persistence of student for following year, a binary response variable (0: not persistent on the next term, 1:persistent on the next term), call it \textbf{y2}=\textbf{Persistence.NextYear}.
+
+Briefly, you will fit regression models on $y1$ and classification models on $y2$ using the subset of predictors in the data set. Don't use all predictors in any model.
+
+***
+
+\section{A. Touch and Feel the Data - 5 pts}
+
+- Import Data Set and Set Up:
+
+Open the data set \textbf{StudentDataTrain.csv}. Be familiar with the data and variables. Start exploring it. Practice the code at the bottom and do the set-up.
+
+- Do Exploratory Data Analysis:
+
+Start with Exploratory Data Analysis (EDA) before running models. Visually or aggregatedly you can include the description and summary of the variables (univariate, and some bivariate analyses). If you keep this part very simple, it is ok. 
+
+***
+\section{B. Build Regression Models - 20 pts - each model 5 pts}
+
+Build linear regressions as listed below the specific four models to predict $y1$ with a small set of useful predictors. Please fit all these by justifying why you do (I expect grounding justifications and technical terms used), report the performance indicators in a comparative table, $MSE_{train}$, $MSE_{test}$, $R_{adj, train}^2$ and $R_{adj, test}^2$ using train and test data sets. The regression models you will fit:
+
+\begin{enumerate}
+\item Best OLS SLR
+\item Best OLS MLR using any best small subset of predictors (using any selection methods)
+\item Best MLR Ridge with any best small subset of predictors
+\item Best MLR Lasso with any best small subset of predictors
+\end{enumerate}
+
+For tuning parameter, justify with statistical methods/computations why you choose.
+
+***
+\section{C. Build Classification Models  - 20 pts - each model 5pts}
+
+Build  four classification models as below. Please fit all these, include performance indicators for train and test data sets, separately. Include confusion matrix for each. For each `train` and `test` data set, report: `accuracy`, `recall`, `precision`, and `f1` in a cooperative table. For LR or LDA, include ROC curve, area and interpretation. The classification models you will fit:
+
+\begin{enumerate}
+\item Logistic Regression (LR) with any best small subset of predictors
+\item KNN Classification with any best small subset of predictors
+\item Linear Discriminant Analysis (LDA) with any best small subset of predictors
+\item Quadratic Discriminant Analysis (QDA) with any best small subset of predictors
+\end{enumerate}
+
+Justify why you choose specific K in KNN with a grid search or CV methods.
+
+***
+\section{D. Overall Evaluations and Conclusion - 5 pts}
+
+Briefly, make critiques of the models fitted and write the conclusion (one sentence for each model, one sentence for each problem - regression and classificaton problems we have here). Also, just address one of these: diagnostics, violations, assumptions checks, overall quality evaluations of the models,  importance analyses (which predictors are most important or effects of them on response), outlier analyses. You don't need to address all issues. Just show the reflection of our course materials. 
+
+***
+\newpage{}
+
+\section{Project Evaluation}
+
+The submitted project report will be evaluated according to the following criteria: 
+
+\begin{enumerate}
+\item All models in the instruction used correctly 
+\item Completeness and novelty of the model fitting 
+\item Techniques and theorems of the methods used accurately 
+\item Reflection of in-class lectures and discussions
+\item Achieved reasonable/high performances; insights obtained (patterns of variables)
+\item Clear write-ups
+\end{enumerate}
+
+If the response is not full or not reflecting the correct answer as expected, you may still earn partial points. For each part or model, I formulated this `partial points` as this:
+
+- 25% of pts: little progress with some minor solutions; 
+- 50% of pts: major calculation mistake(s), but good work; 
+- 75% of pts: correct method used, but minor mistake(s). 
+
+Additionally, a student who will get the highest performances from both problems in the class (`minimum test MSE` from the regression model and `highest precision rate` from the classification model) will get a BONUS.
+
+\section{Tips and Clarifications}
+
+- You will use the test data set to asses the performance of the fitted models based on train data set. 
+
+- Implementing 5-fold cross validation method while fitting with train data set is suggested.
+
+- You can use any packs as long as you are 100% sure what it does and clear to the grader.
+
+- Include compact other useful measurements and plots. Not too many! Report some useful results in a comparative table each. 
+
+- Include helpful compact plots with titles. 
+
+- Keep at most 4 decimals to present numbers and the performance scores. 
+
+- What other models could be used to get better results? This is an extra if you like to discuss.
+
+
+***
+***
+
+\newpage
+
+
+
+
+## Your Solutions
+
+\subsection{Section A.} 
+
+```{r echo=TRUE, results='hold'}
+getwd() #gets what working directory is
+
+# Create a RStudio Project and work under it.
+
+#Download, Import and Assign 
+train <- read.csv("StudentDataTrain.csv")
+test <- read.csv("StudentDataTest.csv")
+```
+
+```{r echo=TRUE, results='hold'}
+#Summarize univariately
+summary(train) 
+```
+
+```{r echo=TRUE, results='hold'}
+summary(test) 
+```
+```{r echo=TRUE, results='hold'}
+#Dims
+dim(train) #5961x18
+dim(test) #1474x18
+```
+```{r echo=TRUE, results='hold'}
+#Without NA's
+dim(na.omit(train)) #5757x18
+dim(na.omit(test)) #1445x18
+```
+
+```{r echo=TRUE, results='hold'}
+#Perc of complete cases
+sum(complete.cases(train))/nrow(train)
+sum(complete.cases(test))/nrow(test)
+```
+
+```{r echo=TRUE, results='hold'}
+#Delete or not? Don't delete!! Use Imputation method to fill na's
+train <- na.omit(train)
+test <- na.omit(test)
+dim(train)
+```
+
+#you can create new columns based on features
+
+```{r echo=TRUE, results='hold'}
+#Variable/Column names
+colnames(test)
+```
+
+```{r echo=TRUE, results='hold'}
+#Response variables 
+#Do this for train after processing the data AND for test data sets)
+y1=train$Term.GPA #numerical
+y2=train$Persistence.NextYear #categorical
+```
+
+```{r echo=TRUE, results='hold'}
+##Summarize
+#y1
+hist(y1)
+boxplot(y1)
+```
+
+```{r echo=TRUE, results='hold'}
+#y2: 0 - not persistent (drop), 1 - persistent (stay)
+table(y2)
+```
+
+```{r echo=TRUE, results='hold'}
+#Persistence
+aa=table(test$Persistence.NextYear, test$Gender)
+addmargins(aa)
+prop.table(aa,2)
+barplot(aa,beside=TRUE,legend=TRUE) #counts
+barplot(t(aa),beside=TRUE,legend=TRUE)
+```
+
+```{r echo=TRUE, results='hold'}
+#ggplots: just read more with help(ggplot2) and play
+## Persistence percent by Year
+library(ggplot2)
+ggplot(data=train, aes(x=Persistence.NextYear, fill=Gender))+          #, fill=gender
+  geom_bar(stat="count")+ ggtitle("Student Count with Persistence across Gender") #bar chart
+```
+
+```{r echo=TRUE, results='hold'}
+##GPA and Persistence by Gender and (Entry) Years
+qplot(Term.GPA, data=train[which(!is.na(train$Gender)),], fill=Gender, colour = I("red"), 
+      na.rm = TRUE, main="GPA and Persistence", binwidth=.5)
+```
+
+```{r echo=TRUE, results='hold'}
+##just template
+ggplot(data=train, aes(x=Persistence.NextYear))+          #, fill=gender
+  geom_bar(stat="count", position = position_dodge())+  #stat="bin"
+  facet_grid(Entry_Term ~ Gender)
+
+```
+```{r, echo=TRUE, results='hold'}
+pairs(y1~HSGPA+SAT_Total+Entry_Term+N.RegisteredCourse+N.Ws+N.DFs+N.As+N.PassedCourse+N.CourseTaken+Perc.PassedEnrolledCourse+Perc.Pass+Perc.Withd+N.GraduateCourse+FullTimeStudent, data= train, main="Scatterplot Matrix", pch='.')
+```
+```{r, echo=TRUE, results='hold'}
+cor_mat=cor(train[sapply(train, is.numeric)])
+round(cor_mat, 2)
+```
+So correlation matrix shows that Term.GPA and Persistence.NextYear have good correlation. 
+
+```{r, echo=TRUE, results='hold'}
+# graph analysis (histogram plot)
+par(mfrow=c(3,2))
+hist(train$HSGPA, prob=T)
+hist(train$SAT_Total, prob=T)
+hist(train$Entry_Term, prob=T)
+hist(train$N.RegisteredCourse, prob=T)
+hist(train$N.Ws, prob=T)
+hist(train$N.DFs, prob=T)
+```
+
+```{r, echo=TRUE, results='hold'}
+par(mfrow=c(3,2))
+hist(train$N.As, prob=T)
+hist(train$N.PassedCourse, prob=T)
+hist(train$N.CourseTaken, prob=T)
+hist(train$Perc.PassedEnrolledCourse, prob=T)
+hist(train$Perc.Pass, prob=T)
+hist(train$Perc.Withd, prob=T)
+```
+
+
+***
+
+\newpage
+\subsection{Section B.} 
+
+- Model 1. 
+
+Here, we see that y1 (Term.GPA) has no good correlation with any of the predictors from the correlation matrix plot in Section A. So we will check a few variables one ata a time based on correlation with y1,i.e., HSGPA, Sat_Total, N.As
+
+For each case we do a Cross validation test
+
+```{r, echo=TRUE, eval=TRUE}
+## k-Fold CV
+k=5 
+set.seed(99)
+folds=sample(1:k,nrow(train),replace=TRUE)
+```
+
+```{r echo=TRUE, results='hold'}
+#install.packages('modelr')
+library(modelr)
+```
+
+First we find if any variables are collinear
+```{r, echo=TRUE, results='hold'}
+train$genderD <- ifelse(train$Gender=="Male", 1, 0)
+test$genderD <- ifelse(test$Gender=="Male", 1, 0)
+# VIF
+library(car)
+lm.fit=lm(Term.GPA~HSGPA+SAT_Total+N.RegisteredCourse+N.Ws+N.DFs+N.As+Perc.PassedEnrolledCourse+Perc.Pass+Perc.Withd+N.GraduateCourse+FullTimeStudent+genderD,data=train)
+vif(lm.fit)
+```
+So from the multicolinearity test by VIF, we observe that some predictors are collinear whose VIF > 5 .
+
+In doing so we reduce our variable set to HSGPA, SAT_Total, N.As, N.GraduateCourse, FullTimeStuden, genderD,  N.RegisteredCourse 
+
+```{r, echo=TRUE, results='hold'}
+# first we will predict y1 based on HSGPA
+#For OLS method find train_MSE and test_MSE
+
+cv.errors_valid_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+cv.errors_train_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+Rsquare_train_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+Rsquare_valid_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  best.fit=lm(Term.GPA~HSGPA,data=train[folds!=j,])
+    # predict the held data for validation MSE
+  pred=predict(best.fit,train[folds==j,],interval="confidence")[,1]
+  cv.errors_valid_OLS1[j,]=mean( (train$Term.GPA[folds==j]-pred)^2)
+  Rsquare_valid_OLS1[j,]=rsquare(best.fit, train[folds==j,])
+  # predict the train MSE for k-1 dataset
+  pred2=predict(best.fit,train[folds!=j,],interval="confidence")[,1]
+  cv.errors_train_OLS1[j,]=mean( (train$Term.GPA[folds!=j]-pred2)^2)
+  Rsquare_train_OLS1[j,]=rsquare(best.fit, train[folds!=j,])
+}
+mean.cv.errors_train_OLS1=apply(cv.errors_train_OLS1,2,mean)
+mean.cv.errors_valid_OLS1=apply(cv.errors_valid_OLS1,2,mean)
+mean.Rsquare_train_OLS1=apply(Rsquare_train_OLS1,2,mean)
+mean.Rsquare_valid_OLS1=apply(Rsquare_valid_OLS1,2,mean)
+
+pred_test=predict(best.fit,test,interval="confidence")[,1]
+mean.cv.errors_test_OLS1=mean( (test$Term.GPA-pred_test)^2)
+mean.Rsquare_test_OLS1=rsquare(best.fit, test)
+
+
+MSE_OLS=c(mean.cv.errors_train_OLS1,mean.cv.errors_valid_OLS1,mean.cv.errors_test_OLS1)
+Rsq_OLS=c(mean.Rsquare_train_OLS1,mean.Rsquare_valid_OLS1,mean.Rsquare_test_OLS1)
+SS_OLS <- cbind(MSE_OLS,Rsq_OLS)
+SS_OLS=round(SS_OLS,3)
+colnames(SS_OLS) <- c("MSE","Rsq_adj")
+rownames(SS_OLS) <- c("Train set", "Valid set", "test set")
+addmargins(SS_OLS)
+knitr::kable(SS_OLS, caption = "SLR Model quality check HSGPA predictor")
+```
+```{r, echo=TRUE, results='hold'}
+# we will predict y1 based on SAT_Total
+#For OLS method find train_MSE and test_MSE
+
+cv.errors_valid_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+cv.errors_train_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+Rsquare_train_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+Rsquare_valid_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  best.fit=lm(Term.GPA~SAT_Total,data=train[folds!=j,])
+    # predict the held data for validation MSE
+  pred=predict(best.fit,train[folds==j,],interval="confidence")[,1]
+  cv.errors_valid_OLS1[j,]=mean( (train$Term.GPA[folds==j]-pred)^2)
+  Rsquare_valid_OLS1[j,]=rsquare(best.fit, train[folds==j,])
+  # predict the train MSE for k-1 dataset
+  pred2=predict(best.fit,train[folds!=j,],interval="confidence")[,1]
+  cv.errors_train_OLS1[j,]=mean( (train$Term.GPA[folds!=j]-pred2)^2)
+  Rsquare_train_OLS1[j,]=rsquare(best.fit, train[folds!=j,])
+}
+mean.cv.errors_train_OLS1=apply(cv.errors_train_OLS1,2,mean)
+mean.cv.errors_valid_OLS1=apply(cv.errors_valid_OLS1,2,mean)
+mean.Rsquare_train_OLS1=apply(Rsquare_train_OLS1,2,mean)
+mean.Rsquare_valid_OLS1=apply(Rsquare_valid_OLS1,2,mean)
+
+pred_test=predict(best.fit,test,interval="confidence")[,1]
+mean.cv.errors_test_OLS1=mean( (test$Term.GPA-pred_test)^2)
+mean.Rsquare_test_OLS1=rsquare(best.fit, test)
+
+
+MSE_OLS=c(mean.cv.errors_train_OLS1,mean.cv.errors_valid_OLS1,mean.cv.errors_test_OLS1)
+Rsq_OLS=c(mean.Rsquare_train_OLS1,mean.Rsquare_valid_OLS1,mean.Rsquare_test_OLS1)
+SS_OLS <- cbind(MSE_OLS,Rsq_OLS)
+SS_OLS=round(SS_OLS,3)
+colnames(SS_OLS) <- c("MSE","Rsq_adj")
+rownames(SS_OLS) <- c("Train set", "Valid set", "test set")
+addmargins(SS_OLS)
+knitr::kable(SS_OLS, caption = "SLR Model quality check SAT_Total")
+```
+```{r, echo=TRUE, results='hold'}
+# we will predict y1 based on N.As
+#For OLS method find train_MSE and test_MSE
+
+cv.errors_valid_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+cv.errors_train_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+Rsquare_train_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+Rsquare_valid_OLS1=matrix(NA,k,1, dimnames=list(NULL, paste("OLS")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  best.fit=lm(Term.GPA~N.As,data=train[folds!=j,])
+    # predict the held data for validation MSE
+  pred=predict(best.fit,train[folds==j,],interval="confidence")[,1]
+  cv.errors_valid_OLS1[j,]=mean( (train$Term.GPA[folds==j]-pred)^2)
+  Rsquare_valid_OLS1[j,]=rsquare(best.fit, train[folds==j,])
+  # predict the train MSE for k-1 dataset
+  pred2=predict(best.fit,train[folds!=j,],interval="confidence")[,1]
+  cv.errors_train_OLS1[j,]=mean( (train$Term.GPA[folds!=j]-pred2)^2)
+  Rsquare_train_OLS1[j,]=rsquare(best.fit, train[folds!=j,])
+}
+mean.cv.errors_train_OLS1=apply(cv.errors_train_OLS1,2,mean)
+mean.cv.errors_valid_OLS1=apply(cv.errors_valid_OLS1,2,mean)
+mean.Rsquare_train_OLS1=apply(Rsquare_train_OLS1,2,mean)
+mean.Rsquare_valid_OLS1=apply(Rsquare_valid_OLS1,2,mean)
+
+pred_test=predict(best.fit,test,interval="confidence")[,1]
+mean.cv.errors_test_OLS1=mean( (test$Term.GPA-pred_test)^2)
+mean.Rsquare_test_OLS1=rsquare(best.fit, test)
+
+
+MSE_OLS=c(mean.cv.errors_train_OLS1,mean.cv.errors_valid_OLS1,mean.cv.errors_test_OLS1)
+Rsq_OLS=c(mean.Rsquare_train_OLS1,mean.Rsquare_valid_OLS1,mean.Rsquare_test_OLS1)
+SS_OLS <- cbind(MSE_OLS,Rsq_OLS)
+SS_OLS=round(SS_OLS,3)
+colnames(SS_OLS) <- c("MSE","Rsq_adj")
+rownames(SS_OLS) <- c("Train set", "Valid set", "test set")
+addmargins(SS_OLS)
+knitr::kable(SS_OLS, caption = "SLR Model quality check N.As")
+```
+So from The Rsq-adjusted value we see that for predictors SAT_Total and N.As are negative meaning very poor. Only for HSGPA we get positive Rsq-adjusted although the value is very less. So the best model of OLS SLR is with predictor HSGPA.
+***
+
+- Model 2.
+
+
+```{r, echo=TRUE, results='hold'}
+#For Forward selection method 
+library(leaps)
+
+library(caret)
+predict_regsubsets=function(object, newdata, id, ...){
+  form=as.formula(object$call[[2]])
+  mat=model.matrix(form,newdata)
+  coefi=coef(object,id=id)
+  xvars=names(coefi)
+  mat[,xvars]%*%coefi #prediction or fitted results
+}
+predictor_no=4
+cv.errors_valid_MLRF=matrix(NA,k,predictor_no, dimnames=list(NULL, paste(1:predictor_no)))
+cv.errors_train_MLRF=matrix(NA,k,predictor_no, dimnames=list(NULL, paste(1:predictor_no)))
+Rsquare_train_MLRF=matrix(NA,k,predictor_no, dimnames=list(NULL, paste(1:predictor_no)))
+Rsquare_valid_MLRF=matrix(NA,k,predictor_no, dimnames=list(NULL, paste(1:predictor_no)))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  best.fit=regsubsets(Term.GPA~HSGPA+SAT_Total+N.As+N.GraduateCourse+FullTimeStudent+N.RegisteredCourse+genderD,data=train[folds!=j,],nvmax=6, method = "forward")
+  for(i in 1:predictor_no){
+    # predict the held data for test MSE
+    pred=predict_regsubsets(best.fit,train[folds==j,],id=i)
+    cv.errors_valid_MLRF[j,i]=mean( (train$Term.GPA[folds==j]-pred)^2)
+    Rsquare_valid_MLRF[j,i]=R2(pred, train$Term.GPA[folds==j])
+  # predict the train MSE for k-1 dataset
+    pred2=predict_regsubsets(best.fit,train[folds!=j,],id=i)
+    cv.errors_train_MLRF[j,i]=mean( (train$Term.GPA[folds!=j]-pred2)^2)
+    Rsquare_train_MLRF[j,i]=R2(pred2, train$Term.GPA[folds!=j])
+  }
+}
+mean.cv.errors_train_MLRF=apply(cv.errors_train_MLRF,2,mean)
+mean.cv.errors_valid_MLRF=apply(cv.errors_valid_MLRF,2,mean)
+mean.Rsquare_train_MLRF=apply(Rsquare_train_MLRF,2,mean)
+mean.Rsquare_valid_MLRF=apply(Rsquare_valid_MLRF,2,mean)
+par(mfrow=c(2,2))
+plot(mean.cv.errors_train_MLRF,type='b')
+plot(mean.cv.errors_valid_MLRF,type='b')
+plot(mean.Rsquare_train_MLRF,type='b')
+plot(mean.Rsquare_valid_MLRF,type='b')
+```
+So the best OLS MLR model is with 3 predictors as evident from MSE and Rsquared graph of validation set.
+```{r echo=TRUE, results='hold'}
+coef(best.fit,3)
+```
+
+So the best 3 combinations of predictors are HSGPA , SAT_Total and genderD
+
+```{r, echo=TRUE, results='hold'}
+pred_test=predict_regsubsets(best.fit,test,id=3)
+mean.cv.errors_test_MLRF=mean( (test$Term.GPA-pred_test)^2)
+mean.Rsquare_test_MLRF=R2(pred_test, test$Term.GPA)
+
+
+MSE_MLRF=c(mean.cv.errors_train_MLRF[3],mean.cv.errors_valid_MLRF[3],mean.cv.errors_test_MLRF)
+Rsq_MLRF=c(mean.Rsquare_train_MLRF[3],mean.Rsquare_valid_MLRF[3],mean.Rsquare_test_MLRF)
+SS_MLRF <- cbind(MSE_MLRF,Rsq_MLRF)
+SS_MLRF=round(SS_MLRF,3)
+colnames(SS_MLRF) <- c("MSE","Rsq_adj")
+rownames(SS_MLRF) <- c("Train set", "Valid set", "test set")
+addmargins(SS_MLRF)
+knitr::kable(SS_MLRF, caption = "MLR Model quality")
+```
+***
+
+
+- Model 3. 
+ 
+ Ridge regression
+
+```{r, echo=TRUE, results='hold'}
+# Ridge Regression
+library(glmnet)
+# grid for lambda
+grid=10^seq(10,-2,length=100)
+x=model.matrix(Term.GPA~HSGPA+SAT_Total+N.As+N.GraduateCourse+FullTimeStudent+N.RegisteredCourse+genderD,train)[,-1]
+y=na.omit(train$Term.GPA)
+
+x_test=model.matrix(Term.GPA~HSGPA+SAT_Total+N.As+N.GraduateCourse+FullTimeStudent+N.RegisteredCourse+genderD,test)[,-1]
+y_test=na.omit(test$Term.GPA)
+```
+
+```{r, echo=TRUE, results='hold'}
+library(glmnet)
+#For Ridge regression method find train_MSE and test_MSE
+cv.errors_train_Ridge=matrix(NA,k,1, dimnames=list(NULL, paste("ridge")))
+cv.errors_valid_Ridge=matrix(NA,k,1, dimnames=list(NULL, paste("ridge")))
+Rsquare_train_Ridge=matrix(NA,k,1, dimnames=list(NULL, paste("ridge")))
+Rsquare_valid_Ridge=matrix(NA,k,1, dimnames=list(NULL, paste("ridge")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  #fit on train data
+  ridge.mod=glmnet(x[folds==j,],y[folds==j],alpha=0,lambda=grid, thresh=1e-12)
+  cv.out=cv.glmnet(x[folds==j,],y[folds==j],alpha=0)
+  bestlam=cv.out$lambda.min
+  # predict the held data for test MSE
+  ridge.pred=predict(ridge.mod,s=bestlam,newx=x[folds!=j,])
+  cv.errors_valid_Ridge[j,]=mean((ridge.pred-y[folds!=j])^2) #test MSE associated with best lambda
+  Rsquare_valid_Ridge[j,]=R2(ridge.pred, y[folds!=j])
+  # predict the train MSE for k-1 dataset
+  ridge.pred=predict(ridge.mod,s=bestlam,newx=x[folds==j,])
+  cv.errors_train_Ridge[j,]=mean((ridge.pred-y[folds==j])^2)
+  Rsquare_train_Ridge[j,]=R2(ridge.pred, y[folds==j])
+}
+mean.cv.errors_train_ridge=apply(cv.errors_train_Ridge,2,mean)
+mean.cv.errors_valid_ridge=apply(cv.errors_valid_Ridge,2,mean)
+mean.Rsquare_train_ridge=apply(Rsquare_train_Ridge,2,mean)
+mean.Rsquare_valid_ridge=apply(Rsquare_valid_Ridge,2,mean)
+
+ridge.pred2=predict(ridge.mod,s=bestlam,newx=x_test)
+
+mean.cv.errors_test_ridge=mean( (y_test-ridge.pred2)^2)
+mean.Rsquare_test_ridge=R2(ridge.pred2, y_test)
+
+
+MSE_ridge=c(mean.cv.errors_train_ridge,mean.cv.errors_valid_ridge,mean.cv.errors_test_ridge)
+Rsq_ridge=c(mean.Rsquare_train_ridge,mean.Rsquare_valid_ridge,mean.Rsquare_test_ridge)
+SS_ridge <- cbind(MSE_ridge,Rsq_ridge)
+SS_ridge=round(SS_ridge,3)
+colnames(SS_ridge) <- c("MSE","Rsq_adj")
+rownames(SS_ridge) <- c("Train set", "Valid set", "test set")
+addmargins(SS_ridge)
+knitr::kable(SS_ridge, caption = "MLR Ridge Model quality")
+```
+```{r, echo=TRUE, results='hold'}
+#refit model with best lambda and get the coefficients
+out1=glmnet(x,y,alpha=0)
+predict(out1,type="coefficients",s=bestlam)[1:4,]
+```
+Here the best subset of coefficints are HSGPA, SAT_Total and N.As
+***
+
+- Model 4. 
+
+Lasso expression
+
+```{r, echo=TRUE, results='hold'}
+library(glmnet)
+#For Lasso regression method find train_MSE and test_MSE
+cv.errors_train_Lasso=matrix(NA,k,1, dimnames=list(NULL, paste("lasso")))
+cv.errors_valid_Lasso=matrix(NA,k,1, dimnames=list(NULL, paste("lasso")))
+Rsquare_train_Lasso=matrix(NA,k,1, dimnames=list(NULL, paste("lasso")))
+Rsquare_valid_Lasso=matrix(NA,k,1, dimnames=list(NULL, paste("lasso")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  #fit on train data
+  lasso.mod=glmnet(x[folds==j,],y[folds==j],alpha=1,lambda=grid, thresh=1e-12) # alpha = 1 for lasso
+  cv.out=cv.glmnet(x[folds==j,],y[folds==j],alpha=1)
+  bestlam=cv.out$lambda.min
+  # predict the held data for test MSE
+  lasso.pred=predict(lasso.mod,s=bestlam,newx=x[folds!=j,])
+  cv.errors_valid_Lasso[j,]=mean((lasso.pred-y[folds!=j])^2) #test MSE associated with best lambda
+  Rsquare_valid_Lasso[j,]=R2(lasso.pred, y[folds!=j])
+  # predict the train MSE for k-1 dataset
+  lasso.pred=predict(lasso.mod,s=bestlam,newx=x[folds==j,])
+  cv.errors_train_Lasso[j,]=mean((lasso.pred-y[folds==j])^2)
+  Rsquare_train_Lasso[j,]=R2(lasso.pred, y[folds==j])
+}
+mean.cv.errors_train_lasso=apply(cv.errors_train_Lasso,2,mean)
+mean.cv.errors_valid_lasso=apply(cv.errors_valid_Lasso,2,mean)
+mean.Rsquare_train_lasso=apply(Rsquare_train_Lasso,2,mean)
+mean.Rsquare_valid_lasso=apply(Rsquare_valid_Lasso,2,mean)
+
+lasso.pred2=predict(lasso.mod,s=bestlam,newx=x_test)
+
+mean.cv.errors_test_lasso=mean( (y_test-lasso.pred2)^2)
+mean.Rsquare_test_lasso=R2(lasso.pred2, y_test)
+
+
+MSE_lasso=c(mean.cv.errors_train_lasso,mean.cv.errors_valid_lasso,mean.cv.errors_test_lasso)
+Rsq_lasso=c(mean.Rsquare_train_lasso,mean.Rsquare_valid_lasso,mean.Rsquare_test_lasso)
+SS_lasso <- cbind(MSE_lasso,Rsq_lasso)
+SS_lasso=round(SS_lasso,3)
+colnames(SS_lasso) <- c("MSE","Rsq_adj")
+rownames(SS_lasso) <- c("Train set", "Valid set", "test set")
+addmargins(SS_lasso)
+knitr::kable(SS_lasso, caption = "MLR Lasso Model quality")
+```
+```{r, echo=TRUE, results='hold'}
+#refit model with best lambda and get the coefficients
+out1=glmnet(x,y,alpha=1)
+predict(out1,type="coefficients",s=bestlam)[1:4,]
+```
+From the lasso model we see that none of the predictors are doing good in predicting Term.GPA. Term.GPA is expressed by intercept which actually is not true. SO lasso expression is not doing good in that respect.
+
+
+***
+\newpage
+\subsection{Section C.} 
+
+
+- Model 1. 
+
+```{r, echo=TRUE, results='hold'}
+perfcheck <- function(ct) {
+  Accuracy <- (ct[1]+ct[4])/sum(ct)
+  Recall <- ct[4]/sum((ct[2]+ct[4]))      #TP/P   or Power, Sensitivity, TPR 
+  Type1 <- ct[3]/sum((ct[1]+ct[3]))       #FP/N   or 1 - Specificity , FPR
+  Precision <- ct[4]/sum((ct[3]+ct[4]))   #TP/P*
+  Type2 <- ct[2]/sum((ct[2]+ct[4]))       #FN/P
+  F1 <- 2/(1/Recall+1/Precision)
+  Values <- as.vector(round(c(Accuracy, Recall, Type1, Precision, Type2, F1),4)) *100
+  Metrics = c("Accuracy", "Recall", "Type1", "Precision", "Type2", "F1")
+  cbind(Metrics, Values)
+  #list(Performance=round(Performance, 4))
+}
+```
+
+```{r, echo=TRUE, results='hold'}
+# we will use cross validation first.
+## k-Fold CV
+
+k=5 
+set.seed(99)
+folds=sample(1:k,nrow(train),replace=TRUE)
+#logistic regression
+error.log.valid=matrix(NA,k,1, dimnames=list(NULL, paste("Log")))
+error.log.train=matrix(NA,k,1, dimnames=list(NULL, paste("Log")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  glm.fits=glm(Persistence.NextYear~Term.GPA+HSGPA+SAT_Total+N.RegisteredCourse+N.Ws+N.DFs+N.As+Perc.PassedEnrolledCourse+Perc.Pass+Perc.Withd+N.GraduateCourse+FullTimeStudent,data=train[folds!=j,],family=binomial)
+  glm.probs.train=predict(glm.fits,train[folds!=j,],type="response")
+
+  glm.probs.valid=predict(glm.fits,train[folds==j,],type="response")
+  
+  # predict the held data for train MSE
+  glm.pred.train=rep(0,length(glm.probs.train))
+  glm.pred.train[glm.probs.train>.5]=1
+  error.log.train[j,]=mean(glm.pred.train!=train$Persistence.NextYear[folds!=j]) #error
+  
+  # predict the held data for test MSE
+  glm.pred.valid=rep(0,length(glm.probs.valid))
+  glm.pred.valid[glm.probs.valid>.5]=1
+  error.log.valid[j,]=mean(glm.pred.valid!=train$Persistence.NextYear[folds==j]) #error
+}
+mean.errors.log.train=apply(error.log.train,2,mean)
+mean.errors.log.valid=apply(error.log.valid,2,mean)
+
+cat('The MSE for train and valid set for logistic regression are', mean.errors.log.train,'&', mean.errors.log.valid)
+```
+
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for logistic regression on train set
+ct1_train=table(train$Persistence.NextYear[folds!=k], glm.pred.train)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_train
+me_log_train=perfcheck(ct1_train)
+
+```
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for logistic regression on valid set
+ct1_valid=table(train$Persistence.NextYear[folds==k], glm.pred.valid)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_valid
+me_log_valid=perfcheck(ct1_train)
+
+```
+
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for logistic regression on test set
+glm.probs.test=predict(glm.fits,test,type="response")
+glm.pred.test=rep(0,length(glm.probs.test))
+glm.pred.test[glm.probs.test>.5]=1
+ct1_test=table(test$Persistence.NextYear, glm.pred.test)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_test
+me_log_test=perfcheck(ct1_test)
+
+```
+```{r, echo=TRUE, results='hold'}
+#performance metric for logistic regression
+a=cbind(me_log_train[,1],me_log_train[,2],me_log_valid[,2],me_log_test[,2])
+colnames(a)=c("Metrics","Train","valid","test")
+knitr::kable(a, caption = "Model Metrics Logistic Regression")
+```
+So what we see is Logistic regression performs very good in terms of accuracy, precision, recall and F1-score for both train, valid and test set.There is not much gap between train and test set. So it suggests that data is well distributed.
+
+```{r, echo=TRUE, results='hold'}
+library(pROC)
+par(mfrow=c(2,2))
+train_prob = predict(glm.fits, newdata = train, type = "response")
+train_roc = roc(train$Persistence.NextYear ~ train_prob, plot = TRUE, print.auc = TRUE, main="Train ROC curve")
+test_prob = predict(glm.fits, newdata = test, type = "response")
+test_roc = roc(test$Persistence.NextYear ~ test_prob, plot = TRUE, print.auc = TRUE, main="Test ROC curve")
+```
+So the ROC curve for train and test set shows AUC of 0.861 and 0.885. So we are doing a very decent job.
+
+***
+
+- Model 2. 
+
+#knn with grid search 
+```{r, echo=TRUE, results='hold'}
+#install.packages('e1071')
+library('e1071')
+x1 <- train[,-1]
+x =x1[,-1]
+x=x[,-3]
+x=x[,-4]
+x=x[,-4]
+y <- factor(train[,6])# getting the response variable
+obj2 <- tune.knn(x, y, k = 1:10, tunecontrol = tune.control(sampling = "boot"))
+summary(obj2)
+```
+So the dispersion is lowest with k of 9. So we need 9 nearest neighbor points for best knn performance.
+
+```{r, echo=TRUE, results='hold'}
+plot(obj2)
+
+```
+So the best K is 9
+```{r, echo=FALSE, eval=FALSE}
+#KNN regression
+attach(train)
+k=5 
+set.seed(99)
+folds=sample(1:k,nrow(train),replace=TRUE)
+error.knn.test=matrix(NA,k,1, dimnames=list(NULL, paste("knn")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  train.X=cbind(Term.GPA, HSGPA, SAT_Total, N.RegisteredCourse, N.Ws, N.DFs, N.As, N.PassedCourse, N.CourseTaken, Perc.PassedEnrolledCourse, Perc.Pass, N.GraduateCourse)[folds!=j,]
+  
+  test.X=cbind(Term.GPA, HSGPA, SAT_Total, N.RegisteredCourse, N.Ws, N.DFs, N.As, N.PassedCourse, N.CourseTaken, Perc.PassedEnrolledCourse, Perc.Pass, N.GraduateCourse)[folds==j,]
+  
+  knn.pred=knn(train.X,test.X,train$Persistence.NextYear[folds!=j],k=obj2$best.parameters[1])
+  
+  error.knn.test[j,]=mean(knn.pred!=train$Persistence.NextYear[folds==j])
+  
+}
+
+mean.errors.knn.test=apply(error.knn.test,2,mean)
+
+cat('The test error rate for KNN are', mean.errors.knn.test)
+
+```
+
+
+```{r, echo=TRUE, results='hold'}
+attach(train)
+#confusion matrix for knn for valid set
+train.X=cbind(Term.GPA, HSGPA, SAT_Total, N.RegisteredCourse, N.Ws, N.DFs, N.As, N.PassedCourse, N.CourseTaken, Perc.PassedEnrolledCourse, Perc.Pass, N.GraduateCourse)
+  
+test.X=cbind(Term.GPA, HSGPA, SAT_Total, N.RegisteredCourse, N.Ws, N.DFs, N.As, N.PassedCourse, N.CourseTaken, Perc.PassedEnrolledCourse, Perc.Pass, N.GraduateCourse)
+```
+
+```{r, echo=TRUE, results='hold'}
+library(class)
+knn.pred=knn(train.X,test.X,train$Persistence.NextYear,k=obj2$best.parameters[1])
+ct5_knn=table(train$Persistence.NextYear, knn.pred)
+cat('the confusion matrix is',sep="\n\n")
+ct5_knn
+me_knn_valid=perfcheck(ct5_knn)
+```
+
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for knn for valid set
+detach(train)
+attach(test)
+train.X=cbind(Term.GPA, HSGPA, SAT_Total, N.RegisteredCourse, N.Ws, N.DFs, N.As, N.PassedCourse, N.CourseTaken, Perc.PassedEnrolledCourse, Perc.Pass, N.GraduateCourse)
+  
+test.X=cbind(Term.GPA, HSGPA, SAT_Total, N.RegisteredCourse, N.Ws, N.DFs, N.As, N.PassedCourse, N.CourseTaken, Perc.PassedEnrolledCourse, Perc.Pass, N.GraduateCourse)
+```
+
+```{r, echo=TRUE, results='hold'}
+knn.pred=knn(train.X,test.X,test$Persistence.NextYear,k=obj2$best.parameters[1])
+ct5_knn=table(test$Persistence.NextYear, knn.pred)
+cat('the confusion matrix is',sep="\n\n")
+
+ct5_knn
+me_knn_test=perfcheck(ct5_knn)
+```
+```{r, echo=TRUE, results='hold'}
+#performance metric for logistic regression
+a=cbind(me_knn_valid[,1],me_knn_valid[,2],me_knn_test[,2])
+colnames(a)=c("Metrics","valid","test")
+knitr::kable(a, caption = "Model Metrics KNN")
+```
+So for KNN the metrics are 100% which is kind of justifies here, because there is no seprate train, test, we are separating the class based on nearest neighbours.
+
+***
+
+
+- Model 3. 
+
+LDA model
+```{r, echo=TRUE, results='hold'}
+# we will use cross validation first. on LDA
+## k-Fold CV
+library(MASS)
+#LDA regression
+error.lda.valid=matrix(NA,k,1, dimnames=list(NULL, paste("Log")))
+error.lda.train=matrix(NA,k,1, dimnames=list(NULL, paste("Log")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  lda.fit=lda(Persistence.NextYear~Term.GPA+HSGPA+SAT_Total+N.RegisteredCourse+N.Ws+N.DFs+N.As+Perc.PassedEnrolledCourse+Perc.Pass+Perc.Withd+N.GraduateCourse+FullTimeStudent,data=train[folds!=j,])
+  #PREDICT on train and test data
+  lda.pred.train=predict(lda.fit, train[folds!=j,])
+  lda.pred.valid=predict(lda.fit, train[folds==j,])
+  lda.class.train=lda.pred.train$class
+  lda.class.valid=lda.pred.valid$class
+  
+  error.lda.train[j,]=mean(lda.class.train!=train$Persistence.NextYear[folds!=j])
+
+  error.lda.valid[j,]=mean(lda.class.valid!=train$Persistence.NextYear[folds==j])
+}
+mean.errors.lda.train=apply(error.lda.train,2,mean)
+mean.errors.lda.valid=apply(error.lda.valid,2,mean)
+
+cat('The train and test error rate for LDA are', mean.errors.lda.train, '&', mean.errors.lda.valid)
+
+```
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for LDA on train set
+ct1_train=table(train$Persistence.NextYear[folds!=k], lda.class.train)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_train
+me_lda_train=perfcheck(ct1_train)
+
+```
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for LDA on valid set
+ct1_valid=table(train$Persistence.NextYear[folds==k], lda.class.valid)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_valid
+me_lda_valid=perfcheck(ct1_valid)
+
+```
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for LDA on test set
+lda.pred.test=predict(lda.fit, test)
+lda.class.test=lda.pred.test$class
+ct1_test=table(test$Persistence.NextYear, lda.class.test)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_test
+me_lda_test=perfcheck(ct1_test)
+
+```
+```{r, echo=TRUE, results='hold'}
+#performance metric for LDA
+a=cbind(me_lda_train[,1],me_lda_train[,2],me_lda_valid[,2],me_lda_test[,2])
+colnames(a)=c("Metrics","Train","valid","test")
+knitr::kable(a, caption = "Model Metrics LDA")
+```
+So agin, for LDA, we are doing good with both train and test set.
+
+```{r, echo=TRUE, results='hold'}
+library(ROCR)
+# choose the posterior probability column carefully, it may be 
+# lda.pred$posterior[,1] or lda.pred$posterior[,2], depending on your factor levels 
+pred <- prediction(lda.pred.test$posterior[,2], test$Persistence.NextYear) 
+perf <- performance(pred,"tpr","fpr")
+plot(perf,colorize=TRUE, main="LDA ROC for test data")
+```
+So again the ROC curve is very good with AUC of 0.88 for LDA
+
+***
+
+- Model 4. 
+
+QDA model
+
+```{r, echo=TRUE, results='hold'}
+# we will use cross validation first. on QDA
+## k-Fold CV
+
+#LDA regression
+error.qda.valid=matrix(NA,k,1, dimnames=list(NULL, paste("Log")))
+error.qda.train=matrix(NA,k,1, dimnames=list(NULL, paste("Log")))
+# now, looping/k-fold procedure
+for(j in 1:k){
+  qda.fit=qda(Persistence.NextYear~Term.GPA+HSGPA+SAT_Total+N.RegisteredCourse+N.Ws+N.DFs+N.As+Perc.PassedEnrolledCourse+Perc.Pass+Perc.Withd+N.GraduateCourse+FullTimeStudent,data=train[folds!=j,])
+  #PREDICT on train and test data
+  qda.pred.train=predict(qda.fit, train[folds!=j,])
+  qda.pred.valid=predict(qda.fit, train[folds==j,])
+  qda.class.train=qda.pred.train$class
+  qda.class.valid=qda.pred.valid$class
+  
+  error.qda.train[j,]=mean(qda.class.train!=train$Persistence.NextYear[folds!=j])
+
+  error.qda.valid[j,]=mean(qda.class.valid!=train$Persistence.NextYear[folds==j])
+}
+mean.errors.qda.train=apply(error.qda.train,2,mean)
+mean.errors.qda.valid=apply(error.qda.valid,2,mean)
+
+cat('The train and test error rate for QDA are', mean.errors.qda.train, '&', mean.errors.qda.valid)
+
+```
+
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for QDA on train set
+ct1_train=table(train$Persistence.NextYear[folds!=k], qda.class.train)
+ct1_train
+me_qda_train=perfcheck(ct1_train)
+
+```
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for QDA on valid set
+ct1_valid=table(train$Persistence.NextYear[folds==k], qda.class.valid)
+ct1_valid
+me_qda_valid=perfcheck(ct1_valid)
+
+```
+```{r, echo=TRUE, results='hold'}
+#confusion matrix for QDA on test set
+qda.pred.test=predict(qda.fit, test)
+qda.class.test=qda.pred.test$class
+ct1_test=table(test$Persistence.NextYear, qda.class.test)
+ct1_test
+me_qda_test=perfcheck(ct1_test)
+
+```
+```{r, echo=TRUE, results='hold'}
+#performance metric for LDA
+a=cbind(me_qda_train[,1],me_qda_train[,2],me_qda_valid[,2],me_qda_test[,2])
+colnames(a)=c("Metrics","Train","valid","test")
+knitr::kable(a, caption = "Model Metrics QDA")
+```
+```{r, echo=TRUE, results='hold'}
+library(ROCR)
+# choose the posterior probability column carefully, it may be 
+# lda.pred$posterior[,1] or lda.pred$posterior[,2], depending on your factor levels 
+pred <- prediction(qda.pred.test$posterior[,2], test$Persistence.NextYear) 
+perf <- performance(pred,"tpr","fpr")
+plot(perf,colorize=TRUE, main="QDA ROC for test data")
+```
+So with QDA the recall score is higher than LDA. That means LDA has more false negatives (FN) compared to QDA. 
+Whereas LDA has higher precision than QDA. That means, QDA has more false negatives compared to LDA.
+
+So depending on situation we can say that we will choose LDA when we want precision in our result and QDA when we want high recall in our result.
+
+***
+\newpage
+Section 4. 
+
+Conclusion on each model.
+
+1. OLS SLR- Here we are doing not a good job best on single predictor HSGPA is the best of the lot with a positive Rsq-adjusted value on tet set.
+
+2. OLS MLR- WE coose forward selection model and found out that 3 predictors is best for the model, HSGPA, SAT_Total and gender. Although again the Rsq value is pretty low. however we are doing good compared to SLR model.
+
+3. MLR Ridge- ridge regression gives better result compared to MLR Forward selection with optimal Lambda. Although the predictors in this Case are diffrenet. the best three predictors we got as HSGPA, SAT_Tota and N.As.
+
+4. MLR Lasso- This model is not doing good and actually worst of all the regression models. since Lasso regression reduces the coefficients to zero, so we obseved only an intercept with non-zero concept, which actually is the mean value of all classes. So its is not good at all.
+
+Assumption checks:
+1. For SLR model we checked the assumptions, all the predictors did not have  a linear relationship with Term.GPA thats why we didnot predict good except for HSGPA.
+
+2. For MLR model, we checked if any of the predictors are collinear and we found many of the them except for 5 as mentioned in MLR model.
+
+3. For Ridge model, there exists conditionally independent Gaussian residuals with zero mean and constant variance across the range of the explanatory variable(s), HSGPA, SAT_total and N.As.
+
+4. Lasso model is very poorly fit. We only get intercept coefficient as non-zero.
+
+
+
+5. For Logistic regression, we observed independence of errors, linearity in the logit for continuous variables, absence of multicollinearity, and lack of strongly influential outliers.
+
+6. For KNN, similar things exist in close proximity which in our case is absolutely valid. We did a great in separating the clasess with KNN.
+
+7. For  LDA model, our data is Gaussian, that each variable is is shaped like a bell curve when plotted. In our case Term.GPA  is like that. So we can say that To an extent our assumption is valid if we consider the varaiable Term.GPA.
+
+8. QDA assumes that each class has its own covariance matrix, Here class 1 has a different covariance than class 0.
+
+***
+
+- BONUS.
+
+```{r, echo=TRUE, results='hold'}
+library(e1071)
+svmfit = svm(Persistence.NextYear~Term.GPA+HSGPA+SAT_Total+N.RegisteredCourse+N.Ws+N.DFs+N.As+Perc.PassedEnrolledCourse+Perc.Pass+Perc.Withd+N.GraduateCourse+FullTimeStudent, data = train, kernel = "radial", cost = 10, scale = TRUE)
+print(svmfit)
+```
+```{r, echo=TRUE, results='hold'}
+pred <- predict(svmfit, test)
+pred.test=rep(0,length(pred))
+pred.test[pred>.5]=1
+ct1_test=table(test$Persistence.NextYear, pred.test)
+cat('the confusion matrix is',sep="\n\n")
+
+ct1_test
+me_svm_test=perfcheck(ct1_test)
+
+```
+```{r, echo=TRUE, results='hold'}
+
+me_svm_test
+
+```
+So we see that a nonlinear SVM gives much better result compared to LDA, QDA, AND logistic regression. So the varaiables in our case are better fitted with an nonlinear SVM kernel.
+
+Another thing to note here have majority class as 1 and minority class as 0, so our data is imbalanced. It would be good to do a balanced weighting for SVM to solve class imbalance.
+
+
+***
+
+\newpage
+
+
+***
+I hereby write and submit my solutions without violating the academic honesty and integrity. If not, I accept the consequences. 
+
+### Write your pair you worked at the top of the page. If no pair, it is ok. List other fiends you worked with (name, last name): ...
+
+### Disclose the resources or persons if you get any help: ...
+
+### How long did the assignment solutions take?: ...
+
+
+***
+## References
+...
